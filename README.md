@@ -2,6 +2,8 @@
 
 OrbitSim is an interactive 2D N‑body orbital mechanics sandbox built with Python, Pygame (viewport) and Dear PyGui (controls). It lets you load presets, add bodies with SI units, and watch gravitational dynamics evolve with trails, collisions, and multiple classic 3‑body configurations.
 
+If you’ve never used Git or Python before, don’t worry—there’s a beginner‑friendly Quick Start below.
+
 ## Features
 
 - Realistic N‑body gravity (SI units) with RK4 integration
@@ -15,18 +17,49 @@ OrbitSim is an interactive 2D N‑body orbital mechanics sandbox built with Pyth
 - Several classic three‑body problem setups (figure‑eight, Lagrange triangle)
 - Modular core: physics, collisions, data models, vector utils, constants, camera, and loader utilities
 
-## Requirements
+## Absolute Beginner Quick Start (Windows)
 
-- Python 3.10+
-- Windows, macOS, or Linux
+These steps assume no Git knowledge and a fresh Windows machine.
 
-Install dependencies:
+1) Install Python
+- Go to https://www.python.org/downloads/windows/
+- Download the latest stable Python 3 release (64‑bit) and run the installer.
+- IMPORTANT: On the first installer screen, check "Add Python to PATH".
+- Click Install Now and finish the setup.
+
+2) Get the OrbitSim files
+- If you downloaded a ZIP (e.g. from a website or shared link):
+  - Right‑click the ZIP, choose "Extract All…"
+  - Choose a folder like C:\Users\YourName\Documents\OrbitSim
+- If this folder is already on your computer, just remember its location.
+
+3) Open PowerShell in the project folder
+- Press Windows key, type "PowerShell", press Enter.
+- In PowerShell, change directory to the folder with orbit_sim.py. Example:
+  - cd "C:\Users\YourName\Documents\OrbitSim"
+
+4) (Optional) Create a virtual environment
+This keeps dependencies isolated from the rest of your system.
 
 ```
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+```
+If you see an execution policy error, run PowerShell as Administrator and execute once:
+
+```
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+```
+Then try activating again.
+
+5) Install dependencies
+
+```
+pip install --upgrade pip
 pip install pygame dearpygui
 ```
 
-## Run
+6) Run the simulator
 
 ```
 python orbit_sim.py
@@ -35,6 +68,27 @@ python orbit_sim.py
 Two windows will appear:
 - Orbit Simulator - Viewport (Pygame)
 - Orbit Simulator - Controls (Dear PyGui)
+
+If a security prompt appears for Windows Firewall, you can safely allow access for this local app.
+
+## Quick Start (macOS/Linux)
+
+1) Install Python 3 (from https://www.python.org/ or your package manager)
+2) Open Terminal, cd into the project directory
+3) (Optional) Create and activate a virtual environment
+
+macOS/Linux:
+```
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+4) Install dependencies and run
+```
+pip install --upgrade pip
+pip install pygame dearpygui
+python3 orbit_sim.py
+```
 
 ## Controls (Viewport)
 
@@ -123,10 +177,20 @@ Tip: For a circular orbit of radius r around a primary of mass M, use v ≈ sqrt
 
 ## Troubleshooting
 
-- Edit panel not applying: Ensure you click "Apply Body Edits" after changes. The panel now avoids overwriting while typing and updates only when selection changes.
-- Simulation too slow or fast: Adjust Speed slider (time scale) and Softening. Trails and velocity vectors can impact performance.
-- Bodies flying apart in 3‑body: Use the provided Figure‑eight or Lagrange templates, or compute initial velocities carefully.
-- Nothing visible: Use Auto‑fit Camera and ensure bodies are added; Empty custom starts blank by design.
+- PowerShell says "python is not recognized":
+  - Close and reopen PowerShell after installing Python, or reboot.
+  - Make sure you checked "Add Python to PATH" during installation.
+  - Try running `py -3 --version` (Windows Python launcher) or `python3 --version`.
+- Activation policy error when enabling the virtual environment:
+  - Run PowerShell as Administrator and execute: `Set-ExecutionPolicy RemoteSigned -Scope CurrentUser`
+- Edit panel not applying:
+  - Click "Apply Body Edits" after changes. The panel avoids overwriting while typing and updates only when selection changes.
+- Simulation too slow or fast:
+  - Adjust Speed slider (time scale) and Softening. Trails and velocity vectors can impact performance.
+- Bodies flying apart in 3‑body:
+  - Use the Figure‑eight or Lagrange templates, or compute initial velocities carefully.
+- Nothing visible:
+  - Use Auto‑fit Camera and ensure bodies are added; Empty custom starts blank by design.
 
 ## Roadmap / Ideas
 
