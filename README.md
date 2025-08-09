@@ -90,6 +90,34 @@ pip install pygame dearpygui
 python3 orbit_sim.py
 ```
 
+## Get the code with Git (Optional)
+
+If you prefer using Git and have a repository URL, you can clone the project instead of downloading a ZIP.
+
+1) Install Git
+- Windows/macOS/Linux: https://git-scm.com/downloads
+- Accept defaults during installation. On Windows, this also installs "Git Bash".
+
+2) Clone the repository
+Repository URL:
+- https://github.com/CrambitHazard/OrbitSim.git
+
+Windows PowerShell or Git Bash:
+```
+cd %USERPROFILE%\Documents
+git clone https://github.com/CrambitHazard/OrbitSim.git OrbitSim
+cd OrbitSim
+```
+
+macOS/Linux Terminal:
+```
+cd "$HOME/Documents"
+git clone https://github.com/CrambitHazard/OrbitSim.git OrbitSim
+cd OrbitSim
+```
+
+Then follow the dependency installation and run steps from the Quick Start sections above.
+
 ## Controls (Viewport)
 
 - Mouse wheel: Zoom in/out (cursor‑anchored)
