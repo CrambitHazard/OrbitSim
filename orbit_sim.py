@@ -1,18 +1,33 @@
 #!/usr/bin/env python3
 """
-Orbit Simulator - Single-file runnable app
+Orbit Simulator application entry point and UI/renderer coordination.
 
-Run instructions:
-1) Install dependencies:
-   pip install pygame dearpygui
+What this module does
+- Starts two event loops: a Pygame rendering thread (viewport) and the Dear PyGui UI
+  (running on the main thread).
+- Maintains a shared SimulationController that owns the bodies and simulation settings;
+  all access is guarded by a re-entrant lock for thread-safety.
+- Provides built-in presets, camera and rendering utilities, and a Dear PyGui-based UI
+  for creating/editing bodies, loading JSON presets, and controlling the simulation.
 
-2) Run:
-   python orbit_sim.py
+Threading model
+- PygameRenderer runs in a background thread and performs: input handling (for the viewport),
+  stepping physics, and drawing. It locks the SimulationController around short critical
+  sections to read/update shared state.
+- The UI class runs in the main thread via Dear PyGui. It updates controls on a periodic
+  frame callback and invokes SimulationController methods as needed; these are lock-protected.
 
-Notes:
-- A Dear PyGui control window will open for UI.
-- A Pygame window will open for the simulation viewport.
-- Both windows are fully interactive and synchronized.
+Units and conventions
+- SI units throughout: meters [m], kilograms [kg], seconds [s]. Camera stores meters-per-pixel.
+- Colors are RGB tuples in 0..255.
+
+Running
+1) Install dependencies: `pip install pygame dearpygui`
+2) Run this module: `python orbit_sim.py`
+
+Windows/OS notes
+- Two windows will open: the viewport (Pygame) and the controls (Dear PyGui). Closing either
+  will shut down the application cleanly.
 """
 
 import math
@@ -139,6 +154,20 @@ class Body:
 # ============================================================
 
 class Camera2D:
+    """
+    Simple 2D camera for converting between world (meters) and screen (pixels).
+
+    Attributes:
+        center: world-space center (meters) kept as a mutable list [x, y].
+        mpp: meters-per-pixel zoom level (smaller means zoomed-in).
+        viewport_size: (width, height) in pixels.
+
+    Methods:
+        world_to_screen: convert a world position to integer pixel coordinates.
+        screen_to_world: inverse transform from pixels to meters.
+        zoom: change meters-per-pixel with optional pivot so the point under the cursor stays fixed.
+        pan_pixels: move the camera center by a pixel offset (scaled by mpp).
+    """
     def __init__(self, center=(0.0, 0.0), meters_per_pixel=DEFAULT_METERS_PER_PIXEL):
         self.center = list(center)  # world coords (m)
         self.mpp = meters_per_pixel  # meters per pixel
@@ -1080,8 +1109,8 @@ class UI:
                 dpg.add_button(label="Play/Pause", callback=self._toggle_play)
                 dpg.add_button(label="Step ▶", callback=self._step_once)
                 dpg.add_checkbox(label="Trails", default_value=True, callback=self._toggle_trails)
-                dpg.add_input_int(label="Trail length", default_value=250, min_value=10, max_value=10000, on_enter=True, width=100,
-                                  callback=lambda s, a, u: self._on_trail_length(a))
+                dpg.add_input_int(label="Trail length", default_value=250, min_value=10, max_value=10000, width=100,
+                                  callback=self._on_trail_length, tag="trail_length_input")
             with dpg.group(horizontal=True):
                 dpg.add_text("Speed (x real-time):")
                 dpg.add_slider_float(min_value=0.0, max_value=1000000000.0, default_value=10000000.0, width=300,
@@ -1315,11 +1344,23 @@ class UI:
             self.sim.clear_trails()
         self._set_status(f"Trails {'ON' if value else 'OFF'}.")
 
-    def _on_trail_length(self, length):
-        length = int(length)
+    def _on_trail_length(self, sender, app_data, user_data=None):
+        # app_data should be the int value from the input; fall back to reading the widget value if needed
+        try:
+            length = int(app_data if app_data is not None else 250)
+        except Exception:
+            try:
+                length = int(dpg.get_value("trail_length_input"))
+            except Exception:
+                length = 250
         if length < 10:
             length = 10
         self.sim.set_trail_length(length)
+        # Reflect clamped value back into the UI so +/- and typing stay consistent
+        try:
+            dpg.set_value("trail_length_input", length)
+        except Exception:
+            pass
         self._set_status(f"Trail length set to {length}.")
 
     def _set_integrator(self, value):

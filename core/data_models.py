@@ -2,7 +2,12 @@
 """
 Data models for Orbit Simulator.
 
-Defines the Body dataclass used across the app.
+This module defines the core Body dataclass shared between physics, rendering, and UI.
+
+Units and usage
+- position is in meters [m], velocity in meters per second [m/s], radius in meters [m], mass in kg.
+- trail stores past positions to render motion paths; it is mutated by the simulation thread.
+- Access to Body instances is coordinated by SimulationController using a lock.
 """
 from collections import deque
 from dataclasses import dataclass, field

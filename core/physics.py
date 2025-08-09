@@ -2,14 +2,29 @@
 """
 Core Physics Engine for Orbit Simulator
 
-This module handles the gravitational N-body physics calculations using 
-Newton's law of universal gravitation and numerical integration methods.
+Responsibilities
+- Compute pairwise gravitational accelerations with optional Plummer-like softening.
+- Advance body states using a fourth-order Runge–Kutta (RK4) time integrator.
+- Provide small helpers for common orbital computations (circular and escape velocity).
 
-Features:
-- Softened gravity to prevent singularities when bodies get very close
-- RK4 (Runge-Kutta 4th order) integration for accurate orbital mechanics
-- Thread-safe physics stepping with configurable timesteps
-- Support for variable time scaling (simulation speed control)
+Units and conventions
+- World space positions are in meters [m].
+- Velocities are in meters per second [m/s].
+- Masses are in kilograms [kg].
+- Time steps are in seconds [s].
+- The gravitational constant G is expressed in SI: m^3 kg^-1 s^-2.
+
+Numerical notes
+- Softening: adds eps^2 to r^2 to limit accelerations at short range, improving stability and
+  allowing larger time steps. This is not physically exact but common in N-body demos.
+- Complexity: acceleration computation is O(N^2) per step (direct summation). For large N,
+  a Barnes–Hut tree or fast-multipole method would reduce cost.
+- Energy: RK4 is not symplectic; total energy will slowly drift over long runs. For better
+  long-term invariants in orbital mechanics, consider a symplectic method (e.g., leapfrog).
+
+Threading
+- This module is pure compute and stateless besides the softening parameter. It is used by a
+  controller that guards shared data with a lock.
 
 Author: Orbit Simulator Project
 """
@@ -62,16 +77,18 @@ class NBodyPhysics:
         """
         Compute gravitational accelerations for all bodies.
         
-        For each body, calculates the total gravitational acceleration due to
-        all other bodies using the softened gravity formula:
-        a_i = sum_j(G * m_j * r_ij / (|r_ij|^2 + eps^2)^(3/2))
+        For each body i, calculates the total gravitational acceleration due to        all other bodies using the softened gravity formula:
+        
+            a_i = Σ_j G * m_j * r_ij / (|r_ij|^2 + eps^2)^(3/2)
+        
+        where r_ij = (x_j - x_i, y_j - y_i). Self-interaction is skipped.
         
         Args:
-            bodies: List of Body objects containing masses
-            positions: List of (x, y) position tuples corresponding to each body
+            bodies: List of Body objects (only .mass is used here).
+            positions: List of (x, y) positions (meters) corresponding to each body.
             
         Returns:
-            List of (ax, ay) acceleration tuples for each body
+            List of (ax, ay) accelerations (m/s^2) for each body, same order as inputs.
         """
         n = len(bodies)
         accelerations = [(0.0, 0.0) for _ in range(n)]
@@ -116,20 +133,19 @@ class NBodyPhysics:
         """
         Perform one Runge-Kutta 4th order integration step.
         
-        RK4 is a high-accuracy numerical integration method that evaluates
-        derivatives at four points to estimate the change over a timestep.
-        This gives much better accuracy than simple Euler integration.
+        RK4 is a high-accuracy, single-step method that evaluates derivatives at four        points to estimate the change over a timestep dt. It is not symplectic but        works well for moderate step sizes in visual simulations.
         
-        The method works by:
-        1. k1: Derivative at start of timestep
-        2. k2: Derivative at middle using k1
-        3. k3: Derivative at middle using k2  
-        4. k4: Derivative at end using k3
-        5. Combine: (k1 + 2*k2 + 2*k3 + k4) / 6
+        Workflow:
+        1) k1 at t
+        2) k2 at t + dt/2 using k1
+        3) k3 at t + dt/2 using k2
+        4) k4 at t + dt using k3
+        Combine (k1 + 2*k2 + 2*k3 + k4)/6.
         
         Args:
-            bodies: List of Body objects to integrate (modified in place)
-            timestep: Time step size in seconds
+            bodies: List of Body objects to integrate (modified in place).
+            timestep: Time step size in seconds (>= 0).
+        """
         """
         n = len(bodies)
         

@@ -2,13 +2,27 @@
 """
 Collision handling for Orbit Simulator.
 
-Supports three modes:
-- Merge: Perfectly inelastic merge conserving momentum; radii combine volumetrically
-- Elastic: Elastic bounce with configurable restitution; resolves overlaps
-- Accretion: Merge if relative speed below local escape velocity; else elastic
+Collision modes
+- Merge: Perfectly inelastic merge conserving linear momentum; radii combine by
+  conserving volume (r^3 additive). Trails are cleared on merge.
+- Elastic: Resolves interpenetration and applies a 1D impulse along the contact
+  normal with coefficient of restitution e ∈ [0,1].
+- Accretion: Heuristic astrophysical model. If relative speed is below the local
+  mutual escape velocity based on the sum of radii, bodies merge; otherwise bounce
+  elastically with restitution e.
 
-This module exposes functions to detect and resolve collisions between
-bodies in the simulation step.
+Settings knobs
+- enable: master switch.
+- mode: one of {"Merge","Elastic","Accretion"}.
+- restitution: elasticity for Elastic/Accretion bounces.
+- radius_scale: multiplies visual radii for collision tests (useful when radii are
+  tiny relative to camera scale or timestep).
+
+Implementation notes
+- Pairwise O(N^2) detection with simple sphere (circle) overlap in 2D.
+- Overlap resolution uses mass-weighted positional correction along the normal.
+- The function mutates the bodies list (removals) when merges occur; call sites should
+  not rely on indices staying stable across a call.
 """
 from typing import List, Optional, Set
 import math
@@ -28,9 +42,19 @@ class CollisionSettings:
 
 def handle_collisions(bodies: List[Body], settings: CollisionSettings) -> Optional[str]:
     """
-    Detect and resolve collisions between bodies.
+    Detect and resolve collisions between bodies in-place.
 
-    Returns a human-readable message if a collision occurred.
+    For each overlapping pair, resolves interpenetration and applies either a merge
+    or an elastic impulse depending on settings. In Accretion mode a merge is chosen
+    when the relative speed is less than the escape velocity computed from the total
+    mass and the (scaled) sum of radii.
+
+    Args:
+        bodies: Mutable list of Body instances (will be modified; items can be removed).
+        settings: CollisionSettings controlling mode and parameters.
+
+    Returns:
+        Optional human-readable message describing the last collision processed, or None.
     """
     if not settings.enable or len(bodies) < 2:
         return None
@@ -143,7 +167,14 @@ def _merge_pair(bodies: List[Body], i: int, j: int, to_remove: Set[int]) -> None
 
 
 def _apply_elastic_impulse(bi: Body, bj: Body, nx: float, ny: float, vn: float, e: float) -> None:
-    """Apply 1D elastic impulse along the collision normal."""
+    """Apply a 1D elastic impulse along the collision normal.
+
+    Args:
+        bi, bj: colliding bodies (mutated in-place).
+        nx, ny: unit collision normal from i to j.
+        vn: relative normal velocity (positive means separating).
+        e: coefficient of restitution in [0,1].
+    """
     inv_mi = 0.0 if bi.mass == 0 else 1.0 / bi.mass
     inv_mj = 0.0 if bj.mass == 0 else 1.0 / bj.mass
     denom = inv_mi + inv_mj

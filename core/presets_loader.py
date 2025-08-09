@@ -2,9 +2,14 @@
 """
 Preset and body JSON loading utilities.
 
-This module defines simple JSON schemas and loaders for:
-- Scene templates: a list of bodies to spawn (templates/*.json)
-- Celestial body definitions: reusable body definitions (celestial_bodies/*.json)
+Purpose
+- Discover available preset and body JSON files and load them into in-memory Body objects.
+- Provide a minimal, permissive schema so users can author files by hand.
+
+Directories
+- templates/: scene presets. Each file produces a list of bodies and may optionally set a time_scale.
+- celestial_bodies/: single body definitions that can be inserted from the UI Body Library.
+The paths are resolved relative to the repository root (one level above this module's directory).
 
 Schemas
 =======
@@ -33,7 +38,9 @@ Celestial body JSON (celestial_bodies/*.json):
   "color": [100, 149, 237]
 }
 
-Users can add their own JSON files into these folders and they'll be picked up by the loader.
+Error handling
+- Loading functions are forgiving: on malformed entries, they skip invalid bodies rather than raising.
+- Colors are clamped into valid RGB ranges.
 """
 import json
 import os
@@ -62,7 +69,11 @@ def _coerce_color(c: List[int]) -> Tuple[int, int, int]:
 
 
 def list_templates() -> List[Tuple[str, str]]:
-  """Return list of (file_name, display_name) for available templates."""
+  """Return list of (file_name, display_name) for available templates.
+
+  Scans the templates directory for .json files and reads the optional "name" field
+  to use as the display name; otherwise uses the stem of the file name.
+  """
   items: List[Tuple[str, str]] = []
   if not os.path.isdir(TEMPLATES_DIR):
     return items
@@ -78,8 +89,16 @@ def list_templates() -> List[Tuple[str, str]]:
 
 def load_template(file_name: str) -> Tuple[List[Body], Optional[float], Optional[str]]:
   """
-  Load a template JSON by file name.
-  Returns (bodies, time_scale, display_name)
+  Load a template JSON by file name located under templates/.
+
+  Args:
+    file_name: file name within the templates directory.
+
+  Returns:
+    (bodies, time_scale, display_name)
+    - bodies: list of instantiated Body objects (possibly empty on error).
+    - time_scale: optional float if provided by the file; otherwise None.
+    - display_name: resolved human-friendly name for UI display.
   """
   path = os.path.join(TEMPLATES_DIR, file_name)
   data = _read_json(path) or {}
@@ -102,14 +121,24 @@ def load_template(file_name: str) -> Tuple[List[Body], Optional[float], Optional
 
 
 def list_celestial_bodies() -> List[str]:
-  """List JSON files available in the celestial_bodies directory."""
+  """List JSON files available in the celestial_bodies directory (sorted)."""
   if not os.path.isdir(BODIES_DIR):
     return []
   return sorted([fn for fn in os.listdir(BODIES_DIR) if fn.lower().endswith(".json")])
 
 
 def load_celestial_body(file_name: str, position=(0.0,0.0), velocity=(0.0,0.0)) -> Optional[Body]:
-  """Load a single body definition and instantiate it with given pose."""
+  """
+  Load a single body definition and instantiate it with the given pose.
+
+  Args:
+    file_name: JSON file name inside celestial_bodies/.
+    position: (x, y) meters to place the body at.
+    velocity: (vx, vy) m/s initial velocity.
+
+  Returns:
+    Body instance on success, or None if the file is missing/malformed.
+  """
   path = os.path.join(BODIES_DIR, file_name)
   data = _read_json(path)
   if not data:
