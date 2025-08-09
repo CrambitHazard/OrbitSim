@@ -1,0 +1,9 @@
+{
+  "name": "Classic 3-body (Lagrange)",
+  "description": "Equal-mass equilateral triangle rotating solution with correct tangential velocities",
+  "bodies": [
+    {"name": "A", "mass": 5e24, "radius": 6e6, "position": [1.5e9, 0.0], "velocity": [0.0, 471.55], "color": [255,120,120]},
+    {"name": "B", "mass": 5e24, "radius": 6e6, "position": [-0.75e9, 1.299038106e9], "velocity": [-408.8, -235.8], "color": [120,255,120]},
+    {"name": "C", "mass": 5e24, "radius": 6e6, "position": [-0.75e9, -1.299038106e9], "velocity": [408.8, -235.8], "color": [120,120,255]}
+  ]
+}

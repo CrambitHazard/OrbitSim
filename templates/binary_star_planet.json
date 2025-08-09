@@ -1,0 +1,10 @@
+{
+  "name": "Binary star with planet",
+  "description": "Two equal-mass stars orbiting barycenter with a lighter planet",
+  "time_scale": 2.0e6,
+  "bodies": [
+    {"name": "Star A", "mass": 9.94235e29, "radius": 4.0e8, "position": [-2.0e10, 0.0], "velocity": [0.0, -15000.0], "color": [255, 220, 120]},
+    {"name": "Star B", "mass": 9.94235e29, "radius": 4.0e8, "position": [ 2.0e10, 0.0], "velocity": [0.0,  15000.0], "color": [255, 220, 160]},
+    {"name": "Planet", "mass": 6.0e24, "radius": 6.3e6, "position": [0.0, 1.2e11], "velocity": [-30000.0, 0.0], "color": [120, 180, 255]}
+  ]
+}
