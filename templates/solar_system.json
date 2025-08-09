@@ -42,6 +42,22 @@
       "position": [7.785e11, 0.0],
       "velocity": [0.0, 13056.8],
       "color": [210, 180, 140]
+    },
+    {
+      "name": "Saturn",
+      "mass": 5.683e26,
+      "radius": 6.026e7,
+      "position": [1.434e12, 0.0],
+      "velocity": [0.0, 9680.0],
+      "color": [250, 229, 191]
+    },
+    {
+      "name": "Venus",
+      "mass": 4.867e24,
+      "radius": 6.05e6,
+      "position": [1.08e11, 0.0],
+      "velocity": [0.0, 35020.0],
+      "color": [238, 208, 83]
     }
   ]
 }

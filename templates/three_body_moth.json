@@ -1,0 +1,31 @@
+{
+  "name": "Classic 3-body (Moth I)",
+  "description": "Equal-mass 'Moth I' periodic orbit (Šuvakov & Dmitrašinović). Positions scaled by 1e9, velocities scaled by 1e3.",
+  "bodies": [
+    {
+      "name": "A",
+      "mass": 5e24,
+      "radius": 6e6,
+      "position": [1.0e9, 0.0],
+      "velocity": [464.44, 396.06],
+      "color": [255,120,120]
+    },
+    {
+      "name": "B",
+      "mass": 5e24,
+      "radius": 6e6,
+      "position": [-1.0e9, 0.0],
+      "velocity": [464.44, 396.06],
+      "color": [120,255,120]
+    },
+    {
+      "name": "C",
+      "mass": 5e24,
+      "radius": 6e6,
+      "position": [0.0, 0.0],
+      "velocity": [-928.88, -792.12],
+      "color": [120,120,255]
+    }
+  ]
+}
+
